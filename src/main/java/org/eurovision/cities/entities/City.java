@@ -1,9 +1,11 @@
-package org.eurovision.cities.entity;
+package org.eurovision.cities.entities;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "cities")
 public class City {
 
     @Id

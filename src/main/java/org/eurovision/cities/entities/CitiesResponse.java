@@ -1,4 +1,4 @@
-package org.eurovision.cities.entity;
+package org.eurovision.cities.entities;
 
 import java.util.List;
 

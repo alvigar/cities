@@ -10,6 +10,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { ListComponent } from './components/list/list.component';
 import { HomeComponent } from './components/home/home.component';
 import { CitiesService } from './services/cities.service';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
@@ -24,7 +25,8 @@ import { CitiesService } from './services/cities.service';
     MatToolbarModule,
     MatIconModule,
     ListComponent,
-    HomeComponent
+    HomeComponent,
+    HttpClientModule
   ],
   providers: [CitiesService],
   bootstrap: [AppComponent]

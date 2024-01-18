@@ -2,6 +2,7 @@ import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 import { City } from "../interfaces/City";
 import { BehaviorSubject, Observable, catchError, finalize, of } from "rxjs";
 import { CitiesService } from "../services/cities.service";
+import { CitiesResponse } from "../interfaces/CitiesResponse";
 
 export class CityDataSource implements DataSource<City> {
 
@@ -10,6 +11,7 @@ export class CityDataSource implements DataSource<City> {
 
     public loading$ = this.loadingSubject.asObservable();
     public length = 100;
+    public totalPages = 100;
 
     constructor(private citiesService: CitiesService) {}
 
@@ -21,12 +23,13 @@ export class CityDataSource implements DataSource<City> {
         this.loadingSubject.complete();
     }
     
-    loadCities(pageIndex = 0, pageSize = 20) {
+    loadCities(pageIndex = 0, pageSize = 20, sortDirection = 'asc', filter = null) {
         this.loadingSubject.next(true);
 
-        this.citiesService.queryByPage(pageIndex, pageSize).pipe(catchError(() => of([])), finalize(() => this.loadingSubject.next(false))).subscribe(cities => {
-            this.length = cities.length;
-            this.citySubject.next(cities);
+        this.citiesService.queryByPage(pageIndex, pageSize, sortDirection, filter).pipe(catchError(() => of([])), finalize(() => this.loadingSubject.next(false))).subscribe(citiesResponse => {
+            this.citySubject.next((citiesResponse as CitiesResponse).content);
+            this.length = (citiesResponse as CitiesResponse).totalElements;
+            this.totalPages = (citiesResponse as CitiesResponse).totalPages;
         })
     }
 }

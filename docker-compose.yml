@@ -10,6 +10,14 @@ services:
       - "1111:1111"
     depends_on:
       - mariadb
+  frontend:
+    build:
+      context: ./cities-front
+      dockerfile: Dockerfile
+    container_name: frontend
+    working_dir: /app
+    ports:
+      - "4200:8000"
   mariadb:
     image: moninoeurovisio/exercise-db_mariadb
     ports:

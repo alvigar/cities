@@ -1,9 +1,10 @@
-package org.eurovision.cities;
+package org.eurovision.cities.services;
 
-import org.eurovision.cities.entity.CitiesResponse;
-import org.eurovision.cities.entity.City;
+import org.eurovision.cities.repositories.CitiesRepository;
+import org.eurovision.cities.entities.City;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +20,11 @@ public class CitiesService {
         this.repository = repository;
     }
 
-    public CitiesResponse query(Integer pageNumber, Integer pageSize) {
-        Page<City> page = this.repository.findAll(PageRequest.of(pageNumber, pageSize));
-        return new CitiesResponse(page.getContent(), page.getTotalPages(), page.getTotalElements());
+    public Page<City> query(Pageable pageable, String filter) {
+        if (filter != null) {
+            return this.repository.findByNameStartingWith(pageable, filter);
+        }
+        return this.repository.findAll(pageable);
     }
 
     public List<City> longestSequence(Integer limit) {

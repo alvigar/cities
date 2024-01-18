@@ -1,13 +1,15 @@
 package org.eurovision.cities;
 
-import org.eurovision.cities.entity.CitiesResponse;
-import org.eurovision.cities.entity.City;
+import org.eurovision.cities.entities.City;
+import org.eurovision.cities.repositories.CitiesRepository;
+import org.eurovision.cities.services.CitiesService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,8 +46,8 @@ public class CitiesServiceTests {
         when(mockedPage.getTotalElements()).thenReturn(300L);
         when(mockedPage.getContent()).thenReturn(CITES_LIST);
         when(repository.findAll(PageRequest.of(PAGE_NUMBER, PAGE_SIZE))).thenReturn(mockedPage);
-
-        CitiesResponse response = service.query(PAGE_NUMBER, PAGE_SIZE);
+        Pageable pageable = PageRequest.of(PAGE_NUMBER, PAGE_SIZE);
+        Page<City> response = service.query(pageable, null);
 
         assertThat(response.getTotalElements()).isEqualTo(300L);
         assertThat(response.getTotalPages()).isEqualTo(10);

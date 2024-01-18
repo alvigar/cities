@@ -1,63 +1,67 @@
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
-import {MatSort, MatSortModule} from '@angular/material/sort';
-import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatInputModule } from '@angular/material/input';
 import { CitiesService } from 'src/app/services/cities.service';
-import {DatePipe} from '@angular/common';
-import { City } from 'src/app/interfaces/City';
-import { catchError, map, merge, startWith, switchMap, of as observableOf } from 'rxjs';
+import { CityDataSource } from 'src/app/helpers/cityDataSource';
+import { CommonModule } from '@angular/common'
+import { debounceTime, distinctUntilChanged, fromEvent, merge, tap } from 'rxjs';
 
 @Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css'],
   standalone: true,
-  imports: [MatProgressSpinnerModule, MatTableModule, MatSortModule, MatPaginatorModule, DatePipe],
+  imports: [
+    MatProgressSpinnerModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    CommonModule,
+    MatInputModule, 
+  ],
 })
-export class ListComponent implements AfterViewInit {
+export class ListComponent implements AfterViewInit, OnInit {
 
-  displayedColumns: string[] = ['created', 'state', 'number', 'title'];
-  data: City[] = [];
+  displayedColumns: string[] = ['id', 'name'];
+  data: CityDataSource;
 
-  resultsLength = 0;
-  isLoadingResults = true;
-  isRateLimitReached = false;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('input') input!: ElementRef;
 
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
+  constructor(private citiesService: CitiesService) {
+    this.data = new CityDataSource(this.citiesService);
+  }
 
-
-  constructor(private citisService: CitiesService) {}
+  ngOnInit() {
+    this.data.loadCities(0, 10);
+  }
 
   ngAfterViewInit() {
-    this.sort.sortChange.subscribe(() => (this.paginator.pageIndex = 0));
+
+    fromEvent(this.input.nativeElement, 'keyup')
+      .pipe(
+        debounceTime(150),
+        distinctUntilChanged(),
+        tap(() => {
+          this.paginator.pageIndex = 0;
+          this.data.loadCities(this.paginator.pageIndex, this.paginator.pageSize, this.sort.direction, this.input.nativeElement.value);
+        })
+      )
+      .subscribe();
+
+    this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+
+    console.log(this.sort.direction)
 
     merge(this.sort.sortChange, this.paginator.page)
       .pipe(
-        startWith({}),
-        switchMap(() => {
-          this.isLoadingResults = true;
-          return this.citisService.queryByPage(this.paginator.pageIndex, this.paginator.pageSize).pipe(catchError(async () => []));
-        }),
-        map(data => {
-          // Flip flag to show that loading has finished.
-          this.isLoadingResults = false;
-          this.isRateLimitReached = data === null;
-
-          if (data === null) {
-            return [];
-          }
-
-          // Only refresh the result length if there is new data. In case of rate
-          // limit errors, we do not want to reset the paginator to zero, as that
-          // would prevent users from re-triggering requests.
-          this.resultsLength = data.length;
-          return data;
-        }),
-      )
-      .subscribe(data => (this.data = data));
+        tap(() => {
+          this.data.loadCities(this.paginator.pageIndex, this.paginator.pageSize, this.sort.direction, this.input.nativeElement.value);
+        })
+      ).subscribe();
   }
-
 }
-
