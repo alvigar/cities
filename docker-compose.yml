@@ -17,7 +17,7 @@ services:
     container_name: frontend
     working_dir: /app
     ports:
-      - "4200:8000"
+      - "8000:8000"
   mariadb:
     image: moninoeurovisio/exercise-db_mariadb
     ports:
